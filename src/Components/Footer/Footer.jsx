@@ -36,6 +36,7 @@ export default function Footer() {
           <a
             style={{ textDecoration: "none" }}
             href="https://fetudev-portfolio.netlify.app/"
+            target="_blank"
           >
             {" "}
             Moonlight Tech Solutions

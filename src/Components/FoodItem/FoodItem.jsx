@@ -15,8 +15,7 @@ const FoodItem = ({ foodImage, foodName, foodPrice, foodDesc }) => {
         {price && !isNaN(price) && <p>${price.toFixed(2)}</p>}{" "}
         {/* Format price */}
       </div>
-      <div className="food-desc">{foodDesc}...</div>{" "}
-      {/* Keep original description handling */}
+      <div className="food-desc">{foodDesc}</div> {/* Show full description */}
     </div>
   );
 };

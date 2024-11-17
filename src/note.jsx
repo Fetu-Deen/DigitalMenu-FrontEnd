@@ -90,3 +90,7 @@
 // }
 
 // export default App; -->
+
+
+//USER ROUTE: http://localhost:5174/api/menu
+// OWNER ROUTE: http://localhost:5174/edit/1?owner=true
