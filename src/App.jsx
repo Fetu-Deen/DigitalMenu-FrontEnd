@@ -1,71 +1,3 @@
-// import React, { useEffect, useState } from "react";
-// import Header from "./Components/Header/Header";
-// import FoodItem from "./Components/FoodItem/FoodItem";
-// import "../src/app.css";
-// import Footer from "./Components/Footer/Footer";
-
-// function App() {
-//   const [menu, setMenu] = useState([]); // State to hold menu items
-//   const [loading, setLoading] = useState(true); // State to manage loading state
-//   const [error, setError] = useState(null); // State to handle errors
-
-//   // Fetch menu items from the server
-//   useEffect(() => {
-//     const fetchMenuItems = async () => {
-//       try {
-//         const response = await fetch("http://localhost:3000/menu");
-//         if (!response.ok) {
-//           throw new Error(`HTTP error! Status: ${response.status}`); // Throw an error if not OK
-//         }
-//         const data = await response.json();
-//         setMenu(data); // Set the fetched data to state
-//       } catch (error) {
-//         setError(error.message); // Handle error
-//       } finally {
-//         setLoading(false); // Stop loading
-//       }
-//     };
-
-//     fetchMenuItems();
-//   }, []); // Empty dependency array means this effect runs once on mount
-
-//   if (loading) {
-//     return <div>Loading...</div>; // Loading state
-//   }
-
-//   if (error) {
-//     return <div>Error: {error}</div>; // Error handling
-//   }
-
-//   return (
-//     <>
-//       <Header />
-//       <div className="foods-container">
-//         {menu.map(({ id, title, img, price, description }) => {
-//           // Truncate the description to a maximum length of 290 characters
-//           const truncatedDescription =
-//             description.length > 290
-//               ? `${description.substring(0, 290)}...`
-//               : description;
-
-//           return (
-//             <FoodItem
-//               key={id} // Use a unique identifier for better performance
-//               foodName={title}
-//               foodImage={img}
-//               foodPrice={typeof price === "number" ? price : parseFloat(price)} // Ensure price is a number
-//               foodDesc={truncatedDescription} // Pass the truncated description
-//             />
-//           );
-//         })}
-//       </div>
-//       <Footer />
-//     </>
-//   );
-// }
-
-//App.jsx
-
 import React, { useEffect, useState, useRef } from "react";
 import Header from "./Components/Header/Header";
 import FoodItem from "./Components/FoodItem/FoodItem";
@@ -73,16 +5,15 @@ import "../src/app.css";
 import Footer from "./Components/Footer/Footer";
 import { Routes, Route, Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { TailSpin } from "react-loader-spinner";
 
 const API_URL = "http://localhost:3001/api/menu";
-const SECRET_KEY = import.meta.env.VITE_SECRET_KEY;
 
 function App() {
   const [menu, setMenu] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null); // State to track the currently previewed image
   const foodItemRefs = useRef([]); // References to food items for scroll animations
 
   const fetchMenuItems = async () => {
@@ -107,7 +38,6 @@ function App() {
 
   // Scroll animation
   useEffect(() => {
-    // Add `hidden` class to all food items initially
     foodItemRefs.current.forEach((ref) => {
       if (ref) {
         ref.classList.add("hidden");
@@ -123,22 +53,21 @@ function App() {
           }
         });
       },
-      {
-        threshold: 0.1, // Trigger animation when 10% of the item is visible
-      }
+      { threshold: 0.1 }
     );
 
     foodItemRefs.current.forEach((ref) => {
       if (ref) observer.observe(ref);
     });
 
-    // Cleanup observer on component unmount
     return () => {
       foodItemRefs.current.forEach((ref) => {
         if (ref) observer.unobserve(ref);
       });
     };
   }, [menu]);
+
+  const closeModal = () => setPreviewImage(null); // Close the modal by setting the preview image to null
 
   if (loading) {
     return (
@@ -172,6 +101,7 @@ function App() {
               foodImage={img}
               foodPrice={typeof price === "number" ? price : parseFloat(price)}
               foodDesc={description}
+              onImageClick={() => setPreviewImage(img)} // Set the preview image when clicked
             />
             {isOwner && (
               <Link to={`/edit/${id}`}>
@@ -181,6 +111,20 @@ function App() {
           </div>
         ))}
       </div>
+
+      {/* Full-Screen Modal */}
+      {previewImage && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content">
+            <img
+              src={previewImage}
+              alt="Full Preview"
+              className="modal-image"
+            />
+          </div>
+        </div>
+      )}
+
       <Footer />
       <Routes>
         <Route
@@ -192,13 +136,17 @@ function App() {
   );
 }
 
-// New Component: FoodItemWithToggle
 function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false); // Track image loading state
+  const [isModalOpen, setIsModalOpen] = useState(false); // Track modal visibility
 
   const toggleDescription = () => {
     setShowFullDescription((prev) => !prev);
   };
+
+  const openModal = () => setIsModalOpen(true); // Open modal
+  const closeModal = () => setIsModalOpen(false); // Close modal
 
   const isLongDescription = foodDesc.length > 290;
   const displayedDescription = showFullDescription
@@ -208,7 +156,17 @@ function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
   return (
     <div className="food-item">
       <h3>{foodName}</h3>
-      <img src={foodImage} alt={`${foodName}`} className="food-image" />
+      <div className="image-wrapper" onClick={openModal}>
+        {!imageLoaded && <div className="placeholder">Loading...</div>}{" "}
+        {/* Placeholder */}
+        <img
+          src={foodImage}
+          alt={`${foodName}`}
+          className={`food-image ${imageLoaded ? "loaded" : "loading"}`} // Add loading class
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)} // Set to true when loaded
+        />
+      </div>
       <p className="food-price">${foodPrice.toFixed(2)}</p> {/* Price Tag */}
       <p className="description">
         {isLongDescription ? displayedDescription : foodDesc}
@@ -222,45 +180,43 @@ function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
   );
 }
 
-
-// Edit Menu Component for updating menu item details
 function EditMenu({ onUpdate }) {
-  const [price, setPrice] = useState(""); // State to manage price input
-  const [secretKey, setSecretKey] = useState(SECRET_KEY); // Use the secret key here
-  const [foodName, setFoodName] = useState(""); // State to store food name
-  const { id } = useParams(); // Get ID from route parameters
-  const navigate = useNavigate(); // Initialize navigate function for programmatic navigation
+  const [price, setPrice] = useState("");
+  const [foodName, setFoodName] = useState("");
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchMenuItem(); // Fetch menu item details when component mounts or ID changes
+    fetchMenuItem();
   }, [id]);
 
-  // Function to fetch specific menu item details by ID
   const fetchMenuItem = async () => {
     try {
-      const response = await axios.get(`${API_URL}/${id}`); // Make GET request for specific item by ID
-      setPrice(response.data.price); // Set price state with fetched item's price
-      setFoodName(response.data.title); // Set food name state with fetched item's title
+      const response = await axios.get(`${API_URL}/${id}`);
+      setPrice(response.data.price);
+      setFoodName(response.data.title);
     } catch (error) {
-      console.error(error); // Log any errors encountered during fetching specific item details
+      console.error(error);
     }
   };
 
-  // Function to handle updating the menu item when button is clicked
   const handleUpdateItem = async () => {
     if (!price || isNaN(price) || parseFloat(price) <= 0) {
-      alert("Please enter a valid positive price."); // Validate that price is entered and is a positive number
+      alert("Please enter a valid positive price.");
       return;
     }
 
+    const secretKey = prompt("Please enter your secret key:"); // Prompt the owner to enter the secret key
+
     try {
+      // Send the price and secret key in the PUT request body
       await axios.put(`${API_URL}/${id}`, {
         price,
-        secret: secretKey, // Include secret key in the request body
+        secret: secretKey, // Include the secret key
       });
       alert("Menu item updated successfully!");
-      onUpdate(); // Refresh menu items in parent component after update
-      navigate("/"); // Navigate back to the main menu page after updating
+      onUpdate();
+      navigate("/");
     } catch (error) {
       console.error(error);
       alert("Failed to update menu item.");
@@ -269,31 +225,22 @@ function EditMenu({ onUpdate }) {
 
   return (
     <div>
-      <h2>Editing "{foodName}" Menu Item</h2>{" "}
-      {/* Dynamically displaying the food item name */}
+      <h2>Editing "{foodName}" Menu Item</h2>
       <input
         type="text"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
         placeholder="New Price"
-        aria-label="New Price" /* Accessibility label */
-      />
-      <input
-        type="text"
-        value={secretKey}
-        onChange={(e) => setSecretKey(e.target.value)}
-        placeholder="Enter Secret Key"
-        aria-label="Secret Key" /* Accessibility label */
+        aria-label="New Price"
       />
       <div style={{ marginTop: "20px", textAlign: "center" }}>
-        <button onClick={handleUpdateItem}>Update</button>{" "}
-        {/* Button to trigger update, repositioned to be directly under the inputs */}
+        <button onClick={handleUpdateItem}>Update</button>
       </div>
     </div>
   );
 }
 
-export default App; // Export App component as default export for usage in other files.
+export default App;
 
 //USER ROUTE: http://localhost:5174/api/menu
 // OWNER ROUTE: http://localhost:5174/edit/1?owner=true
@@ -312,8 +259,62 @@ export default App; // Export App component as default export for usage in other
 // }, []);
 
 // 3. Regarding the description:
-// If the characters exceeds 290 char, it will be truncated...there should be some way to see all the description with sth like "See more details" button on it, then it will be displayed easily in the same page malet new ✅✅ Done this one
-//4 But there uneven heights for each items? Correct that foa better experience
+// If the characters exceeds 290 char, it will be truncated...there should be some way to see all the description with sth like "See more details" button on it, then it will be displayed easily in the same page malet new ✅✅ this one is now Done
+//4 But there're uneven heights for each items? Correct that for a better experience
 
 //FINALLY
 //You need to divide your app.jsx into multiple components and pages if needed for a better readability and neatness
+
+// Better Exp for Mobile size:
+// Of course! Let’s tackle the features one by one. Let me know which one you’d like to start with, or if you want me to suggest an order. Here’s a quick list of the features we can add to your app:
+
+// Features to be Added for a Better Mobile UX
+// **************************************************
+// 1. Collapsible Navigation Bar (Hamburger Menu).
+// 2. Sticky Header or Footer for better navigation.✅ A simple up-arrow button is enough.
+// 3. Optimized Food Item Cards (Stack content, add a More Info button).
+// 4. Swipe Gestures for Food Item Actions.
+// 5. Full-Screen Image Preview on tap. ✅
+// 6. Lazy Loading for Images.✅
+// 7. Larger, Tappable Action Buttons.
+
+// EACH:
+// 1. Collapsible Navigation Bar
+// Why? Save screen space and reduce clutter.
+// Solution: Add a responsive hamburger menu for navigation.
+// Example: Use libraries like React-Burger-Menu or custom CSS.
+// 2. Sticky Header/Footer
+// Why? Makes it easier to navigate without scrolling back to the top.
+// Solution: Add a sticky header with the app name/logo and a floating action button for quick navigation.
+// 3. Card Optimization for Food Items
+// Why? On small screens, tall cards can look awkward.
+// Solution:
+// Stack title, price, and description vertically.
+// Add a button like "More Info" that expands to show the full description when tapped.
+// 4. Swipe Gestures for Actions
+// Why? Touch-based gestures are natural for mobile users.
+// Solution: Allow swipe left/right gestures on food items for quick actions like Edit (if owner) or Add to Favorites.
+// 5. Full-Screen Image Preview
+// Why? Clicking small images to view larger is common for mobile users.
+// Solution: Clicking an image opens it in a full-screen modal for a closer look.
+// 6. Progressive Loading for Faster UX
+// Why? Mobile connections may be slower.
+// Solution: Use lazy-loading for images to load only when they're in the viewport.
+// 7. Add Mobile-Friendly Action Buttons
+// Why? Buttons that are too small frustrate mobile users.
+// Solution: Use larger, well-spaced buttons with tappable areas.
+
+// ***********************************************************************
+// Features to Remove or Simplify for Mobile UX
+// 1. Overloaded Animations/Transitions
+// Why? Excessive animations can cause lag on slower devices.
+// Solution: Use subtle hover or scroll effects, but avoid animations that affect performance.
+// 2. Edit Options Displayed for Every Item
+// Why? If an owner is editing frequently, mobile users may find this cluttered.
+// Solution: Consolidate editing into a single "Edit Menu" button and use a pop-up or modal interface.
+// 3. Long Descriptions in Card View
+// Why? Cards with lengthy descriptions take up too much screen space.
+// Solution: Keep descriptions short and add a "See More" option for detailed views.
+// 4. Full Header/Menu Visibility on Scroll
+// Why? Headers and menus can consume valuable screen space.
+// Solution: Use auto-hide headers that reappear when scrolling up.
