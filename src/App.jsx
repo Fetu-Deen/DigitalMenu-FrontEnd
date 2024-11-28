@@ -6,60 +6,76 @@ import Footer from "./Components/Footer/Footer";
 import { Routes, Route, Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
+// Define the API URL to fetch menu data from the server
 const API_URL = "http://localhost:3001/api/menu";
 
 function App() {
-  const [menu, setMenu] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isOwner, setIsOwner] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null); // State to track the currently previewed image
+  // State variables
+  const [menu, setMenu] = useState([]); // Stores the menu items fetched from the server
+  const [loading, setLoading] = useState(true); // Tracks the loading state
+  const [error, setError] = useState(null); // Stores any errors from fetching data
+  const [isOwner, setIsOwner] = useState(false); // Determines if the current user is the owner
+  const [previewImage, setPreviewImage] = useState(null); // Holds the image for the full-screen modal preview
+  const [newFoodItem, setNewFoodItem] = useState({
+    title: "",
+    price: "",
+    description: "",
+    img: null,
+  }); // Stores new item input data
+
   const foodItemRefs = useRef([]); // References to food items for scroll animations
 
+  // Fetch menu items from the API
   const fetchMenuItems = async () => {
     try {
-      const response = await axios.get(API_URL);
-      setMenu(response.data);
+      const response = await axios.get(API_URL); // Make GET request to fetch menu data
+      setMenu(response.data); // Store the fetched menu data in state
     } catch (error) {
-      setError(error.message);
+      setError(error.message); // Save any error messages
     } finally {
-      setLoading(false);
+      setLoading(false); // Stop the loading spinner
     }
   };
 
+  // Initial setup: fetch menu items and check if the user is the owner
   useEffect(() => {
     fetchMenuItems();
 
+    // Check the query parameter in the URL to determine if the user is the owner
     const queryParams = new URLSearchParams(window.location.search);
     if (queryParams.get("owner") === "true") {
       setIsOwner(true);
     }
   }, []);
 
-  // Scroll animation
+  // Scroll animations using IntersectionObserver
   useEffect(() => {
+    // Initially hide all food items
     foodItemRefs.current.forEach((ref) => {
       if (ref) {
         ref.classList.add("hidden");
       }
     });
 
+    // Set up the observer for scroll-triggered animations
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.remove("hidden");
-            entry.target.classList.add("visible");
+            entry.target.classList.remove("hidden"); // Reveal the item
+            entry.target.classList.add("visible"); // Add animation class
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 } // Trigger the animation when 10% of the element is visible
     );
 
+    // Attach observer to each food item
     foodItemRefs.current.forEach((ref) => {
       if (ref) observer.observe(ref);
     });
 
+    // Cleanup observer on component unmount
     return () => {
       foodItemRefs.current.forEach((ref) => {
         if (ref) observer.unobserve(ref);
@@ -67,8 +83,49 @@ function App() {
     };
   }, [menu]);
 
-  const closeModal = () => setPreviewImage(null); // Close the modal by setting the preview image to null
+  // Function to close the modal by clearing the preview image state
+  const closeModal = () => setPreviewImage(null);
 
+  // Handle form input changes for new menu item
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewFoodItem((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle file upload for new menu item
+  const handleImageChange = (e) => {
+    setNewFoodItem((prev) => ({ ...prev, img: e.target.files[0] }));
+  };
+
+  // Handle adding a new food item
+  const handleAddItem = async (e) => {
+    e.preventDefault();
+
+    const { title, price, description, img } = newFoodItem;
+    if (!title || !price || !description || !img) {
+      alert("All fields are required.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("price", price);
+    formData.append("description", description);
+    formData.append("img", img);
+
+    try {
+      await axios.post(API_URL, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("New menu item added!");
+      fetchMenuItems(); // Refresh menu after adding the item
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add new item.");
+    }
+  };
+
+  // Render a loading spinner if data is being fetched
   if (loading) {
     return (
       <div className="loader">
@@ -77,6 +134,7 @@ function App() {
     );
   }
 
+  // Render an error message and retry button if data fetch fails
   if (error) {
     return (
       <div>
@@ -89,19 +147,20 @@ function App() {
   return (
     <>
       <Header />
+      {/* Display the list of food items */}
       <div className="foods-container">
         {menu.map(({ id, title, img, price, description }, index) => (
           <div
             key={id}
             className="food-item"
-            ref={(el) => (foodItemRefs.current[index] = el)} // Attach refs dynamically
+            ref={(el) => (foodItemRefs.current[index] = el)} // Assign a unique reference for animations
           >
             <FoodItemWithToggle
               foodName={title}
               foodImage={img}
               foodPrice={typeof price === "number" ? price : parseFloat(price)}
               foodDesc={description}
-              onImageClick={() => setPreviewImage(img)} // Set the preview image when clicked
+              onImageClick={() => setPreviewImage(img)} // Set the clicked image for preview
             />
             {isOwner && (
               <Link to={`/edit/${id}`}>
@@ -112,7 +171,38 @@ function App() {
         ))}
       </div>
 
-      {/* Full-Screen Modal */}
+      {/* Form to add a new menu item (only visible to owners) */}
+      {isOwner && (
+        <div className="add-item-form">
+          <h2>Add a New Menu Item</h2>
+          <form onSubmit={handleAddItem}>
+            <input
+              type="text"
+              name="title"
+              placeholder="Title"
+              value={newFoodItem.title}
+              onChange={handleInputChange}
+            />
+            <input
+              type="text"
+              name="price"
+              placeholder="Price"
+              value={newFoodItem.price}
+              onChange={handleInputChange}
+            />
+            <textarea
+              name="description"
+              placeholder="Description"
+              value={newFoodItem.description}
+              onChange={handleInputChange}
+            />
+            <input type="file" name="img" onChange={handleImageChange} />
+            <button type="submit">Add Item</button>
+          </form>
+        </div>
+      )}
+
+      {/* Full-screen image modal */}
       {previewImage && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content">
@@ -126,10 +216,11 @@ function App() {
       )}
 
       <Footer />
+      {/* Define routes for different pages */}
       <Routes>
         <Route
           path="/edit/:id"
-          element={<EditMenu onUpdate={fetchMenuItems} />}
+          element={<EditMenu onUpdate={fetchMenuItems} />} // Page for editing a menu item
         />
       </Routes>
     </>
@@ -137,37 +228,38 @@ function App() {
 }
 
 function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
-  const [showFullDescription, setShowFullDescription] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false); // Track image loading state
-  const [isModalOpen, setIsModalOpen] = useState(false); // Track modal visibility
+  const [showFullDescription, setShowFullDescription] = useState(false); // Toggles the display of the full description
+  const [imageLoaded, setImageLoaded] = useState(false); // Tracks the loading state of the image
+  const [isModalOpen, setIsModalOpen] = useState(false); // Toggles the image modal
 
   const toggleDescription = () => {
-    setShowFullDescription((prev) => !prev);
+    setShowFullDescription((prev) => !prev); // Toggle description visibility
   };
 
-  const openModal = () => setIsModalOpen(true); // Open modal
-  const closeModal = () => setIsModalOpen(false); // Close modal
+  const openModal = () => setIsModalOpen(true); // Open the image modal
+  const closeModal = () => setIsModalOpen(false); // Close the image modal
 
-  const isLongDescription = foodDesc.length > 290;
+  const isLongDescription = foodDesc.length > 290; // Check if the description exceeds 290 characters
   const displayedDescription = showFullDescription
     ? foodDesc
-    : `${foodDesc.substring(0, 290)}...`;
+    : `${foodDesc.substring(0, 290)}...`; // Truncate if necessary
 
   return (
     <div className="food-item">
       <h3>{foodName}</h3>
       <div className="image-wrapper" onClick={openModal}>
         {!imageLoaded && <div className="placeholder">Loading...</div>}{" "}
-        {/* Placeholder */}
+        {/* Placeholder during image load */}
         <img
           src={foodImage}
           alt={`${foodName}`}
-          className={`food-image ${imageLoaded ? "loaded" : "loading"}`} // Add loading class
+          className={`food-image ${imageLoaded ? "loaded" : "loading"}`} // Apply styles based on load state
           loading="lazy"
-          onLoad={() => setImageLoaded(true)} // Set to true when loaded
+          onLoad={() => setImageLoaded(true)} // Mark image as loaded
         />
       </div>
-      <p className="food-price">${foodPrice.toFixed(2)}</p> {/* Price Tag */}
+      <p className="food-price">${foodPrice.toFixed(2)}</p>{" "}
+      {/* Display formatted price */}
       <p className="description">
         {isLongDescription ? displayedDescription : foodDesc}
       </p>
@@ -181,42 +273,42 @@ function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
 }
 
 function EditMenu({ onUpdate }) {
-  const [price, setPrice] = useState("");
-  const [foodName, setFoodName] = useState("");
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const [price, setPrice] = useState(""); // Holds the updated price value
+  const [foodName, setFoodName] = useState(""); // Holds the current food name
+  const { id } = useParams(); // Retrieve the menu item's ID from the URL
+  const navigate = useNavigate(); // Navigate programmatically after editing
 
   useEffect(() => {
-    fetchMenuItem();
+    fetchMenuItem(); // Fetch menu item details when the component is mounted
   }, [id]);
 
   const fetchMenuItem = async () => {
     try {
-      const response = await axios.get(`${API_URL}/${id}`);
+      const response = await axios.get(`${API_URL}/${id}`); // Fetch details of the item to be edited
       setPrice(response.data.price);
       setFoodName(response.data.title);
     } catch (error) {
-      console.error(error);
+      console.error(error); // Log any errors
     }
   };
 
   const handleUpdateItem = async () => {
     if (!price || isNaN(price) || parseFloat(price) <= 0) {
-      alert("Please enter a valid positive price.");
+      alert("Please enter a valid positive price."); // Validate the price input
       return;
     }
 
-    const secretKey = prompt("Please enter your secret key:"); // Prompt the owner to enter the secret key
+    const secretKey = prompt("Please enter your secret key:"); // Authenticate the user with a secret key
 
     try {
-      // Send the price and secret key in the PUT request body
+      // Send the updated price and secret key in a PUT request
       await axios.put(`${API_URL}/${id}`, {
         price,
-        secret: secretKey, // Include the secret key
+        secret: secretKey,
       });
       alert("Menu item updated successfully!");
-      onUpdate();
-      navigate("/");
+      onUpdate(); // Refresh the menu list
+      navigate("/"); // Navigate back to the home page
     } catch (error) {
       console.error(error);
       alert("Failed to update menu item.");
@@ -242,79 +334,5 @@ function EditMenu({ onUpdate }) {
 
 export default App;
 
-//USER ROUTE: http://localhost:5174/api/menu
+// USER ROUTE: http://localhost:5174/api/menu
 // OWNER ROUTE: http://localhost:5174/edit/1?owner=true
-
-// UPDATES...
-//2. Does anyone able to know the OWNER route after the app is deployed by just analyzing the code snippets, especially someone who can navigate to the console section? If so how can I hide that using the .env ?
-// // Fetch menu items on component mount and check if user is an owner
-// useEffect(() => {
-//   fetchMenuItems(); // Call fetchMenuItems here
-//   // Check if user is an owner (this could be replaced with actual authentication logic)
-//   const queryParams = new URLSearchParams(window.location.search);
-//   //provides the query string part of the URL (everything after the ?)
-//   if (queryParams.get("owner") === "true") {
-//     setIsOwner(true);
-//   }
-// }, []);
-
-// 3. Regarding the description:
-// If the characters exceeds 290 char, it will be truncated...there should be some way to see all the description with sth like "See more details" button on it, then it will be displayed easily in the same page malet new ✅✅ this one is now Done
-//4 But there're uneven heights for each items? Correct that for a better experience
-
-//FINALLY
-//You need to divide your app.jsx into multiple components and pages if needed for a better readability and neatness
-
-// Better Exp for Mobile size:
-// Of course! Let’s tackle the features one by one. Let me know which one you’d like to start with, or if you want me to suggest an order. Here’s a quick list of the features we can add to your app:
-
-// Features to be Added for a Better Mobile UX
-// **************************************************
-// 1. Collapsible Navigation Bar (Hamburger Menu).
-// 2. Sticky Header or Footer for better navigation.✅ A simple up-arrow button is enough.
-// 3. Optimized Food Item Cards (Stack content, add a More Info button).
-// 4. Swipe Gestures for Food Item Actions.
-// 5. Full-Screen Image Preview on tap. ✅
-// 6. Lazy Loading for Images.✅
-// 7. Larger, Tappable Action Buttons.
-
-// EACH:
-// 1. Collapsible Navigation Bar
-// Why? Save screen space and reduce clutter.
-// Solution: Add a responsive hamburger menu for navigation.
-// Example: Use libraries like React-Burger-Menu or custom CSS.
-// 2. Sticky Header/Footer
-// Why? Makes it easier to navigate without scrolling back to the top.
-// Solution: Add a sticky header with the app name/logo and a floating action button for quick navigation.
-// 3. Card Optimization for Food Items
-// Why? On small screens, tall cards can look awkward.
-// Solution:
-// Stack title, price, and description vertically.
-// Add a button like "More Info" that expands to show the full description when tapped.
-// 4. Swipe Gestures for Actions
-// Why? Touch-based gestures are natural for mobile users.
-// Solution: Allow swipe left/right gestures on food items for quick actions like Edit (if owner) or Add to Favorites.
-// 5. Full-Screen Image Preview
-// Why? Clicking small images to view larger is common for mobile users.
-// Solution: Clicking an image opens it in a full-screen modal for a closer look.
-// 6. Progressive Loading for Faster UX
-// Why? Mobile connections may be slower.
-// Solution: Use lazy-loading for images to load only when they're in the viewport.
-// 7. Add Mobile-Friendly Action Buttons
-// Why? Buttons that are too small frustrate mobile users.
-// Solution: Use larger, well-spaced buttons with tappable areas.
-
-// ***********************************************************************
-// Features to Remove or Simplify for Mobile UX
-// 1. Overloaded Animations/Transitions
-// Why? Excessive animations can cause lag on slower devices.
-// Solution: Use subtle hover or scroll effects, but avoid animations that affect performance.
-// 2. Edit Options Displayed for Every Item
-// Why? If an owner is editing frequently, mobile users may find this cluttered.
-// Solution: Consolidate editing into a single "Edit Menu" button and use a pop-up or modal interface.
-// 3. Long Descriptions in Card View
-// Why? Cards with lengthy descriptions take up too much screen space.
-// Solution: Keep descriptions short and add a "See More" option for detailed views.
-// 4. Full Header/Menu Visibility on Scroll
-// Why? Headers and menus can consume valuable screen space.
-// Solution: Use auto-hide headers that reappear when scrolling up.
