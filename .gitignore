@@ -12,8 +12,10 @@ dist
 dist-ssr
 *.local
 .env
-note.jsx
 note.css
+note.jsx
+GPT.jsx
+deploy.txt
 
 # Editor directories and files
 .vscode/*
