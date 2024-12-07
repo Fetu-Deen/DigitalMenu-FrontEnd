@@ -16,6 +16,7 @@ note.css
 note.jsx
 GPT.jsx
 deploy.txt
+CommonResource
 
 # Editor directories and files
 .vscode/*
