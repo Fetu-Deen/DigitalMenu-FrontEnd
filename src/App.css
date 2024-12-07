@@ -5,10 +5,29 @@
     padding: 0;
 }
 
-body {
+/* Body colors: 
+Original : deeff2;
+Option 1: ffeedd
+Option 2: e0f7fa */
+/* Original */
+/* body {
     background-color: #deeff2;
     font-family: 'Poppins', sans-serif;
+} */
+/* Better 1 color */
+body {
+    background-color: #ffeedd;
+    /* background-color: #e0f7fa; */
+    font-family: 'Comfortaa',
+        sans-serif;
 }
+
+/* Better color 2 */
+/* body {
+    background-color: #e0f7fa;
+    font-family:'Karla',
+        sans-serif;
+} */
 
 .all-container {
     width: 78%;
@@ -18,7 +37,7 @@ body {
 }
 
 /* header start  */
-.title>h1 {
+/* .title>h1 {
     margin-top: 50px;
     text-align: center;
     font-size: 30px;
@@ -30,6 +49,35 @@ body {
     width: 70px;
     margin: 15px auto 20px;
     background-color: #ff9500;
+} */
+.title {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('your-header-bg.jpg') center/cover no-repeat;
+    background-color: #ff9500;
+    color: #ff9500;
+    text-align: center;
+    padding: 15px 10px;
+    /* font-weight: bold; */
+    font-family: 'Playfair Display', serif;
+    position: relative;
+}
+
+.title h1 {
+    font-size: 2.2rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin: 10px 0;
+    /* color: #d47d03; */
+}
+
+
+.title::after {
+    content: '';
+    display: block;
+    width: 50%;
+    height: 2px;
+    background: #d47d03;
+    margin: 10px auto;
+    /* color: #d47d03; */
 }
 
 /* header end  */
@@ -370,9 +418,103 @@ input {
         font-size: 14px;
         /* Adjust font size for better readability */
     }
-        .loader-square {
-            width: 50px;
-            /* Make the loader smaller */
-            height: 50px;
-        }
+
+    .loader-square {
+        width: 50px;
+        /* Make the loader smaller */
+        height: 50px;
+    }
+}
+
+/* Styling for the form container */
+.add-item-form {
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-item-form h2 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.add-item-form input[type="text"],
+.add-item-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.add-item-form button {
+    display: block;
+    width: 100%;
+    padding: 10px 0;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-item-form button:hover {
+    background-color: #45a049;
+}
+
+@media (max-width: 768px) {
+    .add-item-form {
+        padding: 15px;
+    }
+}
+
+/* Style for the delete button */
+.delete-button {
+    background-color: #f44336;
+    /* Red color */
+    color: white;
+    /* White text */
+    border: none;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    margin-top: 10px;
+    display: block;
+    width: 100%;
+}
+
+/* Hover effect */
+.delete-button:hover {
+    background-color: #d32f2f;
+    /* Darker red on hover */
+    transform: scale(1.05);
+    /* Slight scale-up effect */
+}
+
+/* Focus effect */
+.delete-button:focus {
+    outline: none;
+    box-shadow: 0 0 3px rgba(255, 255, 255, 0.6);
+}
+
+/* Disabled state */
+.delete-button:disabled {
+    background-color: #f2b4b4;
+    cursor: not-allowed;
+}
+
+/* Add some margin for spacing */
+.food-item .delete-button {
+    margin-top: 10px;
 }

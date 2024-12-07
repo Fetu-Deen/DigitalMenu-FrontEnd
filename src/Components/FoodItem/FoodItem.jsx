@@ -1,7 +1,6 @@
 import React from "react";
-
+import "./FoodItem.css";
 const FoodItem = ({ foodImage, foodName, foodPrice, foodDesc }) => {
-  // Convert foodPrice to a number if it's not already
   const price =
     typeof foodPrice === "number" ? foodPrice : parseFloat(foodPrice);
 
@@ -12,10 +11,9 @@ const FoodItem = ({ foodImage, foodName, foodPrice, foodDesc }) => {
       </div>
       <div className="title-price">
         <h3>{foodName}</h3>
-        {price && !isNaN(price) && <p>${price.toFixed(2)}</p>}{" "}
-        {/* Format price */}
+        {price && !isNaN(price) && <p>${price.toFixed(2)}</p>}
       </div>
-      <div className="food-desc">{foodDesc}</div> {/* Show full description */}
+      <div className="food-desc">{foodDesc}</div>
     </div>
   );
 };

@@ -1,0 +1,47 @@
+1. Front End: Netlify obviously
+2. Backend: Render
+3. DB: PlanetScale
+
+**************
+✅Backend Hosting Options (Free)
+Render (Free Tier)
+Supports Node.js and other backend frameworks.
+Free Tier: 750 hours/month of backend service (enough for small projects).
+Deployment: Easy GitHub integration.
+https://vercel.com/
+
+*************
+✅MySQL Database Hosting Options (Free)
+PlanetScale
+Modern MySQL-compatible serverless database.
+Free Tier: Up to 5 GB of data and 1 production branch.
+Easy integration with Node.js using Prisma or traditional MySQL clients.
+https://planetscale.com/
+
+*************
+✅Here’s a breakdown of free plans for the services you’ve chosen, ensuring there’s no payment required if you stay within their limits:
+
+1. Netlify (Frontend)
+Free Plan Includes:
+Unlimited personal projects.
+125k Monthly Function Invocations.
+6 GB of bandwidth per month.
+Deploy previews, continuous deployment, and HTTPS by default.
+Cost? No cost if you stay within the free-tier limits.
+
+2. Render (Backend)
+Free Plan Includes:
+Web Services: 750 hours/month (enough for a single always-on service).
+512 MB RAM and 0.5 CPU for free services.
+Automatic deployments from GitHub.
+Cost? No cost unless you exceed the free-tier usage or need more resources.
+
+3. PlanetScale (Database)
+Free Plan Includes:
+5 GB storage.
+1 production branch and unlimited development branches.
+1 billion row reads/month and 10 million row writes/month.
+Cost? Completely free within these limits.
+
+
+************************************************************************************

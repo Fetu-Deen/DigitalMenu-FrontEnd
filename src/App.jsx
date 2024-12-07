@@ -98,10 +98,19 @@ function App() {
   };
 
   // Handle adding a new food item
+  // Handle adding a new food item
   const handleAddItem = async (e) => {
     e.preventDefault();
 
     const { title, price, description, img } = newFoodItem;
+
+    // Prompt the owner for the secret key
+    const secretKey = prompt("Please enter your secret key:");
+    if (!secretKey) {
+      alert("Secret key is required.");
+      return;
+    }
+
     if (!title || !price || !description || !img) {
       alert("All fields are required.");
       return;
@@ -112,6 +121,7 @@ function App() {
     formData.append("price", price);
     formData.append("description", description);
     formData.append("img", img);
+    formData.append("secret", secretKey); // Add the secret key to the form data
 
     try {
       await axios.post(API_URL, formData, {
@@ -121,7 +131,7 @@ function App() {
       fetchMenuItems(); // Refresh menu after adding the item
     } catch (error) {
       console.error(error);
-      alert("Failed to add new item.");
+      alert("Failed to add new item. Please check your secret key.");
     }
   };
 
@@ -160,7 +170,9 @@ function App() {
               foodImage={img}
               foodPrice={typeof price === "number" ? price : parseFloat(price)}
               foodDesc={description}
-              onImageClick={() => setPreviewImage(img)} // Set the clicked image for preview
+              id={id} // Pass the food item's ID to the component
+              fetchMenuItems={fetchMenuItems} // Pass fetchMenuItems function to refresh the menu after deletion
+              isOwner={isOwner} // Pass the isOwner state to determine if the delete button should show
             />
             {isOwner && (
               <Link to={`/edit/${id}`}>
@@ -196,7 +208,13 @@ function App() {
               value={newFoodItem.description}
               onChange={handleInputChange}
             />
-            <input type="file" name="img" onChange={handleImageChange} />
+            <input
+              type="text"
+              name="img"
+              placeholder="Image Link (URL)"
+              value={newFoodItem.img}
+              onChange={handleInputChange}
+            />
             <button type="submit">Add Item</button>
           </form>
         </div>
@@ -227,7 +245,15 @@ function App() {
   );
 }
 
-function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
+function FoodItemWithToggle({
+  foodName,
+  foodImage,
+  foodPrice,
+  foodDesc,
+  id,
+  fetchMenuItems,
+  isOwner,
+}) {
   const [showFullDescription, setShowFullDescription] = useState(false); // Toggles the display of the full description
   const [imageLoaded, setImageLoaded] = useState(false); // Tracks the loading state of the image
   const [isModalOpen, setIsModalOpen] = useState(false); // Toggles the image modal
@@ -244,22 +270,39 @@ function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
     ? foodDesc
     : `${foodDesc.substring(0, 290)}...`; // Truncate if necessary
 
+  // Handle delete item
+  const handleDelete = async () => {
+    const secretKey = prompt("Please enter your secret key:");
+
+    if (!secretKey) {
+      alert("Secret key is required.");
+      return;
+    }
+
+    try {
+      await axios.delete(`${API_URL}/${id}`, { data: { secret: secretKey } }); // Send the secret key along with the delete request
+      alert("Menu item deleted successfully!");
+      fetchMenuItems(); // Refresh the menu after deletion
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete item.");
+    }
+  };
+
   return (
     <div className="food-item">
       <h3>{foodName}</h3>
       <div className="image-wrapper" onClick={openModal}>
         {!imageLoaded && <div className="placeholder">Loading...</div>}{" "}
-        {/* Placeholder during image load */}
         <img
           src={foodImage}
           alt={`${foodName}`}
-          className={`food-image ${imageLoaded ? "loaded" : "loading"}`} // Apply styles based on load state
+          className={`food-image ${imageLoaded ? "loaded" : "loading"}`}
           loading="lazy"
           onLoad={() => setImageLoaded(true)} // Mark image as loaded
         />
       </div>
-      <p className="food-price">${foodPrice.toFixed(2)}</p>{" "}
-      {/* Display formatted price */}
+      <p className="food-price">${foodPrice.toFixed(2)}</p>
       <p className="description">
         {isLongDescription ? displayedDescription : foodDesc}
       </p>
@@ -267,6 +310,22 @@ function FoodItemWithToggle({ foodName, foodImage, foodPrice, foodDesc }) {
         <button onClick={toggleDescription} className="toggle-desc-button">
           {showFullDescription ? "Show Less" : "See More Details"}
         </button>
+      )}
+
+      {/* Only show the delete button for owners */}
+      {isOwner && (
+        <button onClick={handleDelete} className="delete-button">
+          Delete
+        </button>
+      )}
+
+      {/* Modal for the full image preview */}
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content">
+            <img src={foodImage} alt="Full Preview" className="modal-image" />
+          </div>
+        </div>
       )}
     </div>
   );

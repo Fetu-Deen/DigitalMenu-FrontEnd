@@ -8,25 +8,25 @@ export default function Footer() {
         <div className={styles.footerInfo}>
           <h3>Contact Us</h3>
           <p>
-            <strong>Phone:</strong> (123) 456-7890
+            <strong>Phone:</strong> +251932678214
           </p>
           <p>
-            <strong>Email:</strong> info@evangadi.com
+            <strong>Email:</strong> fettabin@gmail.com
           </p>
           <p>
-            <strong>Location:</strong> 123 Main St, City, Country
+            <strong>Location:</strong> Hawassa, Ethiopia
           </p>
         </div>
         <div className={styles.contactMethods}>
           <h3>Get in Touch</h3>
           <p>
-            <strong>Phone:</strong> (123) 456-7890
+            <strong>Phone:</strong> +251906790061
           </p>
           <p>
-            <strong>Telegram:</strong> @YourTelegramHandle
+            <strong>Telegram:</strong> @Fetu_Deen
           </p>
           <p>
-            <strong>Email:</strong> info@evangadi.com
+            <strong>Email:</strong> info@moonlight.com
           </p>
         </div>
       </footer>
