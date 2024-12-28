@@ -302,7 +302,7 @@ function FoodItemWithToggle({
           onLoad={() => setImageLoaded(true)} // Mark image as loaded
         />
       </div>
-      <p className="food-price">${foodPrice.toFixed(2)}</p>
+      <p className="food-price">ETB {foodPrice.toFixed(2)}</p>
       <p className="description">
         {isLongDescription ? displayedDescription : foodDesc}
       </p>
