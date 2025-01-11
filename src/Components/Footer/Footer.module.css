@@ -73,8 +73,21 @@ p {
         /* Stack sections vertically on small screens */
         align-items: flex-start;
         /* Align items to start */
-        padding: 20px;
+        padding: 3px;
         /* Adjust padding on mobile */
+    }
+
+    .footer p {
+        margin: 0px;
+    }
+
+    .contactMethods {
+        display: none;
+    }
+
+    h3 {
+        margin-bottom: 2px;
+        font-size: 1.1em;
     }
 
     .footerInfo,

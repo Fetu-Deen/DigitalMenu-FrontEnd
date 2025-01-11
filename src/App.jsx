@@ -7,7 +7,8 @@ import { Routes, Route, Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 // Define the API URL to fetch menu data from the server
-const API_URL = "http://localhost:3001/api/menu";
+// const API_URL = "http://localhost:3001/api/menu";
+const API_URL = "https://server.moonlight-menu.com/api/menu"; //after the server deployed, on cPanel
 
 function App() {
   // State variables
@@ -97,7 +98,6 @@ function App() {
     setNewFoodItem((prev) => ({ ...prev, img: e.target.files[0] }));
   };
 
-  // Handle adding a new food item
   // Handle adding a new food item
   const handleAddItem = async (e) => {
     e.preventDefault();
@@ -285,7 +285,7 @@ function FoodItemWithToggle({
       fetchMenuItems(); // Refresh the menu after deletion
     } catch (error) {
       console.error(error);
-      alert("Failed to delete item.");
+      alert(error.response.data.message);
     }
   };
 
@@ -370,7 +370,7 @@ function EditMenu({ onUpdate }) {
       navigate("/"); // Navigate back to the home page
     } catch (error) {
       console.error(error);
-      alert("Failed to update menu item.");
+      alert(error.response.data.message);
     }
   };
 
@@ -393,5 +393,5 @@ function EditMenu({ onUpdate }) {
 
 export default App;
 
-// USER ROUTE: http://localhost:5174/api/menu
-// OWNER ROUTE: http://localhost:5174/edit/1?owner=true
+// USER ROUTE: http://localhost:5173/api/menu
+// OWNER ROUTE: http://localhost:5173/edit/1?owner=true
